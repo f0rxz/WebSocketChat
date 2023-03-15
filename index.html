@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Chat</title>
+	</head>
+	<body>
+		<style>
+			body {
+				margin: 0;
+			}
+			#all_msgs, #msg_inpt, #send_btn {
+				border: 1px solid black;
+				padding: 2px;
+			}
+			#all_msgs {
+				display: block;
+				height: 256px;
+				resize: none;
+				width: 256px;
+			}
+			#msg_inpt {
+				width: 200px;
+			}
+			#send_btn {
+				width: 56px;
+			}
+		</style>
+		<textarea id="all_msgs" disabled=""></textarea>
+		<input id="msg_inpt" placeholder="Message"><button id="send_btn">Send</button>
+		<script>
+			var ws;
+			function send_msg(){
+				if(ws && ws.readyState === 1){
+					ws.send(msg_inpt.value);
+					msg_inpt.value = '';
+				}
+			}
+			msg_inpt.addEventListener('keyup', evt => {
+				if(evt.keyCode === 13)
+					send_msg();
+			});
+			send_btn.addEventListener('click', send_msg);
+			!function connect(){
+				ws = new WebSocket('ws://127.0.0.1:80/ws');
+				ws.onmessage = function(evt){
+					const scroll = all_msgs.scrollHeight - all_msgs.scrollTop - all_msgs.clientHeight === 0
+					all_msgs.insertAdjacentText('beforeEnd', evt.data + '\n');
+					if(scroll)
+						all_msgs.scrollTop = all_msgs.scrollHeight - all_msgs.clientHeight;
+				};
+				ws.onclose = () => {
+					setTimeout(connect, 1e3);
+				};
+			}();
+		</script>
+	</body>
+</html>
